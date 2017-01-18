@@ -225,14 +225,14 @@ delete_objects_batch(Bucket, KeyList) ->
 -spec delete_objects_batch(string(), list(), aws_config()) -> no_return().
 delete_objects_batch(Bucket, KeyList, Config) ->
     Data = lists:map(fun(Item) ->
-            lists:concat(["<Object><Key>", Item, "</Key></Object>"]) end, 
+            lists:concat(["<Object><Key>", Item, "</Key></Object>"]) end,
                 KeyList),
     Payload = unicode:characters_to_list(
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Delete>" ++ Data ++ "</Delete>", 
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Delete>" ++ Data ++ "</Delete>",
                 utf8),
 
     Len = integer_to_list(string:len(Payload)),
-    Url = lists:flatten([Config#aws_config.s3_scheme, 
+    Url = lists:flatten([Config#aws_config.s3_scheme,
                 Bucket, ".", Config#aws_config.s3_host, port_spec(Config), "/?delete"]),
     Host = Bucket ++ "." ++ Config#aws_config.s3_host,
     ContentMD5 = base64:encode(erlcloud_util:md5(Payload)),
@@ -249,7 +249,7 @@ delete_objects_batch_timeout(#aws_config{timeout = Timeout}) ->
     Timeout.
 
 % returns paths list from AWS S3 root directory, used as input to delete_objects_batch
-% example : 
+% example :
 %    25> rp(erlcloud_s3:explore_dirstructure("xmppfiledev", ["sailfish/deleteme"], [])).
 %    ["sailfish/deleteme/deep/deep1/deep4/ZZZ_1.txt",
 %     "sailfish/deleteme/deep/deep1/deep4/ZZZ_0.txt",
@@ -259,14 +259,14 @@ delete_objects_batch_timeout(#aws_config{timeout = Timeout}) ->
 %
 -spec explore_dirstructure(string(), list(), list()) -> list().
 
-explore_dirstructure(_, [], Result) -> 
+explore_dirstructure(_, [], Result) ->
                                     lists:append(Result);
 explore_dirstructure(Bucketname, [Branch|Tail], Accum) ->
     ProcessContent = fun(Data)->
             Content = proplists:get_value(contents, Data),
             lists:foldl(fun(I,Acc)-> R = proplists:get_value(key, I), [R|Acc] end, [], Content)
             end,
-    
+
     Data = erlcloud_s3:list_objects(Bucketname,[{prefix, Branch}, {delimiter, "/"}]),
     case proplists:get_value(common_prefixes, Data) of
         [] -> % it has reached end of the branch
@@ -328,7 +328,7 @@ list_buckets(Config) ->
 % @doc Get S3 bucket policy JSON object
 % API Document: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETacl.html
 %
--spec(get_bucket_policy/1 :: (BucketName::string()) -> ok | {error, Reason::term()}).
+-spec(get_bucket_policy(BucketName::string()) -> ok | {error, Reason::term()}).
 get_bucket_policy(BucketName) ->
     get_bucket_policy(BucketName, default_config()).
 
@@ -344,7 +344,7 @@ get_bucket_policy(BucketName) ->
 %                                   <RequestId>DC1EA9456B266EF5</RequestId>
 %                                   <HostId>DRtkAB80cAeom+4ffSGU3PFCxS7QvtiW+wxLnPF0dM2nxoaRqQk1SK/z62ZJVHAD</HostId>
 %                               </Error>"}}
--spec(get_bucket_policy/2 :: (BucketName::string(), Config::aws_config()) -> {ok, Policy::string()} | {error, Reason::term()}).
+-spec(get_bucket_policy(BucketName::string(), Config::aws_config()) -> {ok, Policy::string()} | {error, Reason::term()}).
 get_bucket_policy(BucketName, Config)
     when is_record(Config, aws_config) ->
         case s3_request2(Config, get, BucketName, "/", "policy", [], <<>>, []) of
@@ -1146,8 +1146,8 @@ s3_request2_no_update(Config, Method, Host, Path, Subresource, Params, Body, Hea
 
 s3_result_fun(#aws_request{response_type = ok} = Request) ->
     Request;
-s3_result_fun(#aws_request{response_type = error, 
-                           error_type = aws, 
+s3_result_fun(#aws_request{response_type = error,
+                           error_type = aws,
                            response_status = Status} = Request) when
       Status >= 500 ->
     Request#aws_request{should_retry = true};
